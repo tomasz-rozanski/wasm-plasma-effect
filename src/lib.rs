@@ -7,14 +7,13 @@
 //     loop {}
 // }
 
-use std::f32::consts::PI as PI;
 use core::sync::atomic::{AtomicU32, Ordering};
-
+use std::f32::consts::PI;
 
 static FRAME: AtomicU32 = AtomicU32::new(0);
 
-const WIDTH: usize = 600;
-const HEIGHT: usize = 600;
+const WIDTH: usize = 400;
+const HEIGHT: usize = 400;
 
 #[no_mangle]
 static mut BUFFER: [u32; WIDTH * HEIGHT] = [0; WIDTH * HEIGHT];
@@ -29,6 +28,8 @@ pub unsafe extern "C" fn go(color_scheme: usize) {
 }
 
 fn map_range(from_range: (f32, f32), to_range: (f32, f32), s: f32) -> f32 {
+    // This function is used to convert between
+    // different coordinate and color formats
     to_range.0 + (s - from_range.0) * (to_range.1 - to_range.0) / (from_range.1 - from_range.0)
 }
 
@@ -36,7 +37,6 @@ fn map_range(from_range: (f32, f32), to_range: (f32, f32), s: f32) -> f32 {
 // as possible.
 fn render_frame_safe(buffer: &mut [u32; WIDTH * HEIGHT], color_scheme: usize) {
     let f = FRAME.fetch_add(1, Ordering::Relaxed);
-    
     let uv_range: (f32, f32) = (-0.5, 0.5);
     let x_coord_range: (f32, f32) = (0.0, WIDTH as f32);
     let y_coord_range: (f32, f32) = (0.0, HEIGHT as f32);
@@ -44,7 +44,6 @@ fn render_frame_safe(buffer: &mut [u32; WIDTH * HEIGHT], color_scheme: usize) {
     let rgb_range: (f32, f32) = (0.0, 255.0);
 
     let ff: f32 = f as f32 / 16.;
-    
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
             let x_unit: f32 = map_range(x_coord_range, uv_range, x as f32);
@@ -57,9 +56,6 @@ fn render_frame_safe(buffer: &mut [u32; WIDTH * HEIGHT], color_scheme: usize) {
             v = v + ((100. * (cx.powi(2) + cy.powi(2)) + 1.).sqrt() + ff).sin();
             // v = v / 2.;
 
-            // let red: f32;
-            // let green: f32;
-            // let blue: f32;
             let (red, green, blue): (f32, f32, f32) = match color_scheme {
                 1 => (
                     // Color scheme #1
@@ -86,7 +82,6 @@ fn render_frame_safe(buffer: &mut [u32; WIDTH * HEIGHT], color_scheme: usize) {
                     (v * PI * 5.).sin(),
                 ),
             };
-            
             let red: u32 = (map_range(rgb_unit_range, rgb_range, red)) as u32;
             let green: u32 = (map_range(rgb_unit_range, rgb_range, green) as u32) << 8;
             let blue: u32 = (map_range(rgb_unit_range, rgb_range, blue) as u32) << 16;

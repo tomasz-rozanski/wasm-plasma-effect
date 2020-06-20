@@ -7,10 +7,10 @@
         async function init() {
             const { instance } = await WebAssembly.instantiateStreaming(
                 fetch("./bare_metal_wasm.wasm"),
-            );
+                );
 
-            const width = 600;
-            const height = 600;
+            const width = 400;
+            const height = 400;
 
             const canvas = document.getElementById("demo-canvas");
             canvas.width = width;
@@ -22,14 +22,16 @@
                     instance.exports.memory.buffer,
                     buffer_address,
                     4 * width * height,
-                ),
+                    ),
                 width,
-            );
+                );
 
             const ctx = canvas.getContext("2d");
 
             const render = () => {
-                instance.exports.go(2);
+                var colorTheme = document.getElementById("theme").value;
+
+                instance.exports.go(colorTheme);
                 ctx.putImageData(image, 0, 0);
                 requestAnimationFrame(render);
             }
@@ -42,7 +44,19 @@
 </head>
 
 <body>
-    <canvas id="demo-canvas"></canvas>
+    <section>
+        <canvas id="demo-canvas"></canvas>
+
+        <br />
+<p class="theme">Select color theme: 
+        <select id="theme" name="theme">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+</p>
+    </section>
 </body>
 
 </html>
